@@ -11,10 +11,6 @@ def get_gemini_client():
     return genai.Client(api_key=api_key)
 
 def evaluate_keyword_batch(client: genai.Client, keywords_batch: list) -> list:
-    """
-    Evaluates a batch of rows containing zips and keywords against MarketCall rules.
-    keywords_batch is a list of dictionaries with row details.
-    """
     prompt = f"""
     You are an expert PPC campaign manager and affiliate compliance auditor. 
     Review the following list of keyword-zip records against the strict MarketCall offer rules below.
@@ -38,14 +34,6 @@ def evaluate_keyword_batch(client: genai.Client, keywords_batch: list) -> list:
         "reason": "valid commercial intent for accepted pest",
         "campaign_name": "Pest_Control_Search_RTB",
         "ad_group": "Ant Control Near Me"
-      }},
-      {{
-        "keyword": "bed bug inspection company",
-        "original_zip": "56303",
-        "status": "EXCLUDE",
-        "reason": "bed bugs are prohibited by offer rules",
-        "campaign_name": "N/A",
-        "ad_group": "N/A"
       }}
     ]
     """
@@ -56,7 +44,8 @@ def evaluate_keyword_batch(client: genai.Client, keywords_batch: list) -> list:
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.1,
-                response_mime_type="application/json"
+                response_mime_type="application/json",
+                tools=None  # Explicitly disables automatic function calling wrappers causing hangs
             ),
         )
         return json.loads(response.text)
