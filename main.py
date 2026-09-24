@@ -5,7 +5,7 @@ from modules.processor import process_keywords_in_chunks
 from modules.exporter import save_clean_campaign_data
 
 def main():
-    input_file = "results-20260924-035933.csv"
+    input_file = "results-20260924-035933 - pest_control_search_terms.csv"
     output_file = "approved_campaign_keywords.csv"
     
     if not os.path.exists(input_file):
