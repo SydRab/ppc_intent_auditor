@@ -28,8 +28,10 @@ jobs:
       run: |
         python test.py
 
-    - name: Upload Test Output Artifact
+    - name: Upload Test Output Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: approved-batch1-output
-        path: test_approved_batch1.csv
+            name: audit-test-outputs
+            path: |
+              test_approved_batch1.csv
+              auto_negative_keywords.csv
