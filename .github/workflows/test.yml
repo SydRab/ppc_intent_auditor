@@ -27,3 +27,9 @@ jobs:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       run: |
         python test.py
+
+    - name: Upload Test Output Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: approved-batch1-output
+        path: test_approved_batch1.csv
