@@ -44,11 +44,20 @@ def evaluate_keyword_batch(client: genai.Client, keywords_batch: list) -> list:
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.1,
-                response_mime_type="application/json",
-                tools=None  # Explicitly disables automatic function calling wrappers causing hangs
+                response_mime_type="application/json"
             ),
         )
-        return json.loads(response.text)
+        
+        # Clean potential markdown code blocks if present
+        raw_text = response.text.strip()
+        if raw_text.startswith("```json"):
+            raw_text = raw_text[7:]
+        elif raw_text.startswith("```"):
+            raw_text = raw_text[3:]
+        if raw_text.endswith("```"):
+            raw_text = raw_text[:-3]
+            
+        return json.loads(raw_text.strip())
     except Exception as e:
         print(f"Error communicating with Gemini API: {e}")
         return []
