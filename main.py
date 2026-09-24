@@ -22,17 +22,18 @@ def main():
     records = []
     for _, row in df.iterrows():
         records.append({
-            "keyword": str(row['suggested_keyword']),
+            "suggested_keyword": str(row['suggested_keyword']),
             "original_zip": str(row['original_zip'])
         })
         
     print(f"Loaded {len(records)} total keyword-zip rows for auditing.")
     
-    # Run the modular processing pipeline in batches
+    # Run the modular processing pipeline in batches across the entire dataset
     results = process_keywords_in_chunks(client, records, chunk_size=100)
     
-    # Export final structured output with all original metrics
+    # Export final structured output, multi-bucket scores, and auto-negatives
     save_clean_campaign_data(df, results, output_file)
+    print("Full pipeline execution completed successfully!")
 
 if __name__ == "__main__":
     main()
