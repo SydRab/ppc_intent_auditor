@@ -12,15 +12,18 @@ def get_gemini_client():
 
 def evaluate_keyword_batch(client: genai.Client, keywords_batch: list) -> list:
     prompt = f"""
-    You are an expert PPC campaign manager and affiliate compliance auditor. 
-    Review the following list of keyword-zip records against the strict MarketCall offer rules below.
+    You are an elite, cutthroat PPC campaign auditor specializing in local-service lead generation and affiliate arbitrage. 
+    Evaluate the following list of keyword-zip records against the strict MarketCall offer rules below.
     
     {MARKETCALL_OFFER_RULES}
     
-    INSTRUCTIONS:
-    1. EXCLUDE any record where the keyword contains competitor brand names, prohibited pests (e.g., bed bugs, bees, wildlife), DIY/informational intent ("how to", "home remedies"), or building type violations.
-    2. KEEP high-intent commercial or emergency local service terms strictly matching accepted household pests.
-    3. ASSIGN a logical Google Ads "ad_group" category name (e.g., "Termite Exterminator", "Ant Control") and a "campaign_name" for approved records.
+    INSTRUCTIONS FOR CLASSIFICATION:
+    1. compliance_status: Classify as "APPROVED" if it's a high-intent commercial or emergency local service term for accepted household pests. Classify as "EXCLUDED" if it violates rules.
+    2. intent_type: Classify strictly as "Emergency", "Commercial", "Informational", or "Navigational".
+    3. is_phone_intent: Boolean (true/false) indicating if the keyword explicitly signals an immediate desire to call or find a phone number/emergency service.
+    4. violation_category: If excluded, choose from ["DIY", "Prohibited_Pest", "Competitor_Brand", "Wrong_Building_Type", "Low_Intent", "None"]. If approved, set to "None".
+    5. bid_tier_weight: Assign an integer score: 3 = Emergency phone intent (highest priority), 2 = Standard commercial service intent, 1 = Low priority / long-tail. Set to 0 if excluded.
+    6. auto_negative_reason: If excluded, provide a short categorization reason for negative keyword building; otherwise set to "".
     
     RECORDS TO REVIEW:
     {json.dumps(keywords_batch)}
@@ -28,12 +31,24 @@ def evaluate_keyword_batch(client: genai.Client, keywords_batch: list) -> list:
     Return response strictly as a JSON list of objects matching this exact structure:
     [
       {{
-        "keyword": "best ant control",
+        "suggested_keyword": "best ant control",
         "original_zip": "56303",
-        "status": "KEEP",
-        "reason": "valid commercial intent for accepted pest",
-        "campaign_name": "Pest_Control_Search_RTB",
-        "ad_group": "Ant Control Near Me"
+        "compliance_status": "APPROVED",
+        "intent_type": "Commercial",
+        "is_phone_intent": false,
+        "violation_category": "None",
+        "bid_tier_weight": 2,
+        "auto_negative_reason": ""
+      }},
+      {{
+        "suggested_keyword": "how to get rid of bees naturally",
+        "original_zip": "56303",
+        "compliance_status": "EXCLUDED",
+        "intent_type": "Informational",
+        "is_phone_intent": false,
+        "violation_category": "DIY",
+        "bid_tier_weight": 0,
+        "auto_negative_reason": "DIY informational intent and prohibited pest"
       }}
     ]
     """
@@ -48,7 +63,6 @@ def evaluate_keyword_batch(client: genai.Client, keywords_batch: list) -> list:
             ),
         )
         
-        # Clean potential markdown code blocks if present
         raw_text = response.text.strip()
         if raw_text.startswith("```json"):
             raw_text = raw_text[7:]
