@@ -15,18 +15,24 @@ def main():
     print("Initializing Gemini API Client...")
     client = get_gemini_client()
     
-    print(f"Loading raw keywords from {input_file}...")
+    print(f"Loading raw data from {input_file}...")
     df = pd.read_csv(input_file)
     
-    keyword_col = 'suggested_keyword' if 'suggested_keyword' in df.columns else df.columns[0]
-    all_keywords = df[keyword_col].dropna().tolist()
-    print(f"Loaded {len(all_keywords)} raw keywords for auditing.")
+    # Prepare records containing keyword and zip code for contextual evaluation
+    records = []
+    for _, row in df.iterrows():
+        records.append({
+            "keyword": str(row['suggested_keyword']),
+            "original_zip": str(row['original_zip'])
+        })
+        
+    print(f"Loaded {len(records)} total keyword-zip rows for auditing.")
     
-    # Run the modular processing pipeline
-    results = process_keywords_in_chunks(client, all_keywords, chunk_size=150)
+    # Run the modular processing pipeline in batches
+    results = process_keywords_in_chunks(client, records, chunk_size=100)
     
-    # Export final structured output
-    save_clean_campaign_data(df, results, output_file, keyword_col)
+    # Export final structured output with all original metrics
+    save_clean_campaign_data(df, results, output_file)
 
 if __name__ == "__main__":
     main()
